@@ -3,8 +3,9 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { Suspense } from "react";
 
-export default function Page() {
+function Callback() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -30,3 +31,13 @@ export default function Page() {
     );
 }
 
+
+const Page = () => {
+    return (
+        <Suspense fallback={<p>Loading...</p>}>
+            <Callback />
+        </Suspense>
+    )
+};
+
+export default Page;
