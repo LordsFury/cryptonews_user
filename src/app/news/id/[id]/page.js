@@ -141,25 +141,27 @@ const Page = () => {
 
   const handleShare = async (e, platform) => {
     e.preventDefault();
+
     const articleUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/news/${article._id}`;
     const articleTitle = article.title || "Check out this article";
 
-    let platformUrl = "";
-    if (platform === "telegram") {
-      platformUrl = `https://t.me/share/url?url=${encodeURIComponent(articleUrl)}&text=${encodeURIComponent(articleTitle)}`;
-    } else if (platform === "X") {
-      platformUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(articleUrl)}&text=${encodeURIComponent(articleTitle)}`;
-    } else if (platform === "reddit") {
-      platformUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(articleUrl)}&title=${encodeURIComponent(articleTitle)}`;
-    } else if (platform === "linkedin") {
-      platformUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(articleUrl)}`;
-    }
+    const shareUrls = {
+      telegram: `https://t.me/share/url?url=${encodeURIComponent(articleUrl)}&text=${encodeURIComponent(articleTitle)}`,
+      x: `https://twitter.com/intent/tweet?url=${encodeURIComponent(articleUrl)}&text=${encodeURIComponent(articleTitle)}`,
+      reddit: `https://www.reddit.com/submit?url=${encodeURIComponent(articleUrl)}&title=${encodeURIComponent(articleTitle)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(articleUrl)}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(articleUrl)}`,
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(articleTitle + " " + articleUrl)}`,
+    };
+
+    const platformUrl = shareUrls[platform.toLowerCase()];
 
     if (platformUrl) {
-      window.open(platformUrl, "_blank");
+      window.open(platformUrl, "_blank", "noopener,noreferrer");
+      await updateShareCount(platform);
     }
-    await updateShareCount(platform);
   };
+
 
 
   return (
