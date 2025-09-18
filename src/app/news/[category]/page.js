@@ -4,8 +4,8 @@ import { useSearch } from "@/context/SearchContext";
 import { useCategory } from "@/context/CategoryContext";
 import { ArrowDown, ArrowUp, Loader2 } from "lucide-react";
 import NewsItem from "@/components/NewsItem";
-import Image from "next/image";
 import Footer from "@/components/Footer";
+import Sidebar from "@/components/Sidebar";
 
 const Page = () => {
     const { searchQuery } = useSearch();
@@ -15,7 +15,8 @@ const Page = () => {
     const [displayArticles, setDisplayArticles] = useState([]);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
-    const [initialized, setInitialized] = useState(false)
+    const [initialized, setInitialized] = useState(false);
+    const [trendingArticles, setTrendingArticles] = useState(null);
     const limit = 3;
 
     const getArticles = async () => {
@@ -32,10 +33,12 @@ const Page = () => {
             const data = await response.json();
             if (data.success) {
                 setArticles(data.articles || []);
+                setTrendingArticles(data.trendingArticles || []);
             }
         } catch (error) {
             console.error("Error fetching articles:", error);
             setArticles([]);
+            setTrendingArticles([]);
         } finally {
             setLoading(false);
             setInitialized(true);
@@ -116,12 +119,9 @@ const Page = () => {
                         </button>
                     </div>
                 </div>
-                <div className="hidden lg:block">
-                    <Image alt='text' src='/images/img.avif' width={350} height={400} />
-                    <Image alt='text' src='/images/img.avif' width={350} height={400} />
-                </div>
+                <Sidebar trendingArticles={trendingArticles} />
             </div>}
-            <Footer />
+            {initialized && displayArticles.length > 0 && <Footer />}
         </div>
     );
 };

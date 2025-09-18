@@ -1,9 +1,6 @@
-import { useEffect, useState, useMemo } from "react";
 import Item from "./Item";
-import { useSearch } from "@/context/SearchContext";
-import { Loader2 } from "lucide-react";
 
-const Home = () => {
+const Home = ({filtered}) => {
   let alphabets = [
     "#",
     "A",
@@ -36,49 +33,9 @@ const Home = () => {
 
   let lastInitial = "";
 
-  const [glossaryData, setglossaryData] = useState([]);
-  const { searchQuery } = useSearch();
-
-  const getGlossary = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/glossary`, {
-        method: "GET"
-      });
-      const data = await response.json();
-      setglossaryData(data.glossary);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  useEffect(() => {
-    getGlossary();
-  }, [glossaryData]);
-
   const scrollToLetter = (letter) => {
     const section = document.getElementById(`letter-${letter}`);
     section?.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  const filtered = useMemo(() => {
-    const q = (searchQuery || "").toLowerCase();
-    let list = glossaryData;
-    if (q) {
-      list = list.filter((a) => {
-        const termMatch = a.term?.toLowerCase().includes(q);
-        const definitionMatch = a.definition?.toLowerCase().includes(q);
-        return termMatch || definitionMatch;
-      });
-    }
-    return list;
-  }, [searchQuery, glossaryData]);
-
-  if (!glossaryData || glossaryData.length === 0) {
-    return (
-      <div className="flex justify-center p-6">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
   }
 
   return (

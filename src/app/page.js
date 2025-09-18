@@ -139,7 +139,7 @@ const Page = () => {
           </div>
         </div>
         <div className="grid grid-cols-1 mt-20 sm:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-8">
-          {articles.slice(5, 15).map((article) => (
+          {articles.slice(5, 14).map((article) => (
             <Link
               key={article._id}
               href={`/news/id/${article._id}`}
@@ -178,7 +178,7 @@ const Page = () => {
         </div>
       </div>
       }
-      <Footer />
+      {initialized && articles.length > 0 && <Footer />}
     </div>
   )
 }
