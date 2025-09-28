@@ -43,10 +43,10 @@ const Page = () => {
 
   return (
     <div className='bg-white dark:bg-zinc-900 min-h-screen'>
-      {loading && !initialized && <div className="flex justify-center p-6 pt-20 pb-8 px-4 sm:px-8 lg:px-12">
+      {loading && !initialized && <div className="flex justify-center p-6 pt-6 pb-8 px-4 sm:px-8 lg:px-12">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>}
-      {initialized && articles.length > 0 && <div className='pt-20 pb-8 px-4 sm:px-8 lg:px-12'>
+      {initialized && articles.length > 0 && <div className='pt-6 pb-8 px-4 sm:px-8 lg:px-12'>
         <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
           🔥 Top Trending News
         </h2>

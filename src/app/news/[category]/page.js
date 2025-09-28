@@ -99,7 +99,7 @@ const Page = () => {
                     </p>
                 </div>
             )}
-            {initialized && displayArticles.length > 0 && <div className="flex justify-between gap-8 pt-20 px-4 sm:px-6 lg:px-20">
+            {initialized && displayArticles.length > 0 && <div className="flex justify-between gap-8 pt-6 px-4 sm:px-6 lg:px-20">
                 <div className="lg:max-w-2/3 w-full px-4 sm:px-8 md:px-8 lg:px-2 xl:px-2">
                     <div className="mb-6">
                         <h1 className="text-xl sm:text-3xl font-semibold text-black dark:text-white">

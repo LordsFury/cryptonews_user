@@ -167,7 +167,7 @@ const Page = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20 bg-white dark:bg-zinc-900 py-10 px-4 sm:px-8 md:px-16 text-zinc-800 dark:text-zinc-100">
+    <div className="min-h-screen pt-6 bg-white dark:bg-zinc-900 py-10 px-4 sm:px-8 md:px-16 text-zinc-800 dark:text-zinc-100">
       {loading && <div className="flex justify-center pt-20 p-6 bg-white dark:bg-zinc-900 h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>}

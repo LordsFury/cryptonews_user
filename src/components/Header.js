@@ -7,7 +7,7 @@ import Image from 'next/image';
 const Header = () => {
 
   return (
-    <div className='pt-12'>
+    <div className='pt-2'>
       <div className="flex flex-col md:flex-row justify-center md:justify-between gap-12 md:gap-6 mb-6 px-6 md:px-20 py-10 bg-gradient-to-r from-blue-800 to-purple-800 text-white shadow-lg">
         <div className="text-center md:text-left">
           <div className='flex items-center gap-2'>
