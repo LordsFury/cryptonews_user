@@ -172,7 +172,7 @@ const Page = () => {
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>}
       {!loading && article && <div className='flex gap-8'>
-        <div className='flex flex-col flex-1 max-w-2/3 px-4 sm:px-6'>
+        <div className='flex flex-col flex-1 w-2/3 px-4 sm:px-6'>
           <div className="space-y-4">
             <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight">
               {article.title}
@@ -212,7 +212,7 @@ const Page = () => {
                   <span className="text-lg">{article.likes}</span>
                 </span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center flex-wrap gap-4">
                 <div className='flex items-center gap-3 mr-6'>
                   <Share2Icon size={18} />
                   <h1 className="text-md font-semibold text-gray-800 dark:text-gray-200">
