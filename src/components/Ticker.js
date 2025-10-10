@@ -4,19 +4,22 @@ import { FaBitcoin, FaEthereum } from "react-icons/fa";
 import { SiLitecoin, SiBinance, SiSolana, SiTether, SiRipple, SiCardano, SiTrove } from "react-icons/si";
 import { FaDog } from "react-icons/fa";
 import { AiOutlineDollarCircle } from "react-icons/ai";
+import CurrencySelector from "./CurrencySelector";
 
 export default function Ticker() {
     const [coins, setCoins] = useState([]);
     const [paused, setPaused] = useState(false);
+    const [loading, setLoading] = useState(true);
     const contentRef = useRef(null);
     const [anim, setAnim] = useState({ distance: 1000, duration: 30 });
-
+    const [currency, setCurrency] = useState("USD");
 
     useEffect(() => {
         const fetchData = async () => {
+            setLoading(true);
             try {
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/crypto/ticker`,
+                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/crypto/ticker?convert=${currency}`,
                     {
                         headers: {
                             source: "user"
@@ -24,19 +27,20 @@ export default function Ticker() {
                     }
                 );
                 const data = await response.json();
-                console.log(data)
                 if (data.success) {
                     setCoins(data.tickers);
                 }
             } catch (err) {
                 console.error("Error fetching ticker:", err);
             }
+            finally {
+                setLoading(false);
+            }
         };
-
         fetchData();
         const interval = setInterval(fetchData, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [currency]);
 
     useEffect(() => {
         if (contentRef.current) {
@@ -92,93 +96,93 @@ export default function Ticker() {
         }
     };
 
+    function currencySymbol(curr) {
+        switch (curr) {
+            case "USD": return "$";
+            case "EUR": return "€";
+            case "GBP": return "£";
+            case "PKR": return "₨";
+            case "INR": return "₹";
+            case "JPY": return "¥";
+            case "CNY": return "¥";
+            case "CAD": return "C$";
+            case "AUD": return "A$";
+            case "CHF": return "CHF";
+            case "AED": return "د.إ";
+            case "SAR": return "﷼";
+            case "TRY": return "₺";
+            case "ZAR": return "R";
+            default: return "$";
+        }
+    }
+
     return (
-        <div
-            className="w-full pt-16 overflow-hidden border-b border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900"
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-        >
-            <div
-                className="flex whitespace-nowrap animate-marquee"
-                style={{
+        <div className="w-full pt-15 border-b border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 relative">
+            { !loading && <CurrencySelector currency={currency} setCurrency={setCurrency} />}
+            { !loading && <div className="overflow-hidden"
+                onMouseEnter={() => setPaused(true)}
+                onMouseLeave={() => setPaused(false)}>
+                <div className="flex whitespace-nowrap animate-marquee" style={{
                     "--distance": `-${anim.distance}px`,
                     "--duration": `${anim.duration}s`,
                     animationPlayState: paused ? "paused" : "running",
-                }}
-            >
-                <div ref={contentRef} className="flex items-center text-sm text-black dark:text-white">
-                    {coins.map((coin) => (
-                        <a
-                            key={coin.id}
-                            href={`https://coinmarketcap.com/currencies/${coin.slug || coin.symbol?.toLowerCase()}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
-                        >
-                            {getIcon(coin.symbol)}
-                            <span className="font-semibold">{coin.symbol}</span>
-                            <span className="text-sm">
-                                ${coin.quote?.USD?.price?.toFixed(2)}
-                            </span>
-                            <div className="flex gap-1 items-center">
-                                <span
-                                    className={`text-sm font-medium ${coin.quote?.USD?.percent_change_24h > 0
+                }}>
+                    <div ref={contentRef} className="flex items-center text-sm text-black dark:text-white">
+                        {coins.map((coin) => (
+                            <a key={coin.id} href={`https://coinmarketcap.com/currencies/${coin.slug || coin.symbol?.toLowerCase()}`}
+                                target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+                                {getIcon(coin.symbol)}
+                                <span className="font-semibold">{coin.symbol}</span>
+                                <span className="text-sm">
+                                    {currencySymbol(currency)}
+                                    {coin.quote?.[currency]?.price?.toFixed(2)}
+                                </span>
+                                <div className="flex gap-1 items-center">
+                                    <span className={`text-sm font-medium ${coin.quote?.[currency]?.percent_change_24h > 0
                                         ? "text-green-500"
                                         : "text-red-500"
-                                        }`}
-                                >
-                                    {coin.quote?.USD?.percent_change_24h > 0 ? <span>▲</span> : <span>▼</span>}
-                                </span>
-                                <span
-                                    className={`text-sm font-medium ${coin.quote?.USD?.percent_change_24h > 0
+                                        }`}>
+                                        {coin.quote?.[currency]?.percent_change_24h > 0 ? <span>▲</span> : <span>▼</span>}
+                                    </span>
+                                    <span className={`text-sm font-medium ${coin.quote?.[currency]?.percent_change_24h > 0
                                         ? "text-green-500"
                                         : "text-red-500"
-                                        }`}
-                                >
-                                    {coin.quote?.USD?.percent_change_24h?.toFixed(2)}%
+                                        }`}>
+                                        {coin.quote?.[currency]?.percent_change_24h?.toFixed(2)}%
+                                    </span>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                    <div className="flex items-center text-sm text-black dark:text-white">
+                        {coins.map((coin) => (
+                            <a key={`${coin.id}-copy`} href={`https://coinmarketcap.com/currencies/${coin.slug || coin.symbol?.toLowerCase()}`}
+                                target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+                                {getIcon(coin.symbol)}
+                                <span className="font-semibold">{coin.symbol}</span>
+                                <span className="text-sm">
+                                    {currencySymbol(currency)}
+                                    {coin.quote?.[currency]?.price?.toFixed(2)}
                                 </span>
-                            </div>
-                        </a>
-                    ))}
+                                <div className="flex gap-1 items-center">
+                                    <span className={`text-sm font-medium ${coin.quote?.[currency]?.percent_change_24h > 0
+                                        ? "text-green-500"
+                                        : "text-red-500"
+                                        }`} >
+                                        {coin.quote?.[currency]?.percent_change_24h > 0 ? <span>▲</span> : <span>▼</span>}
+                                    </span>
+                                    <span className={`text-sm font-medium ${coin.quote?.[currency]?.percent_change_24h > 0
+                                        ? "text-green-500"
+                                        : "text-red-500"
+                                        }`}>
+                                        {coin.quote?.[currency]?.percent_change_24h?.toFixed(2)}%
+                                    </span>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
                 </div>
-                <div className="flex items-center text-sm text-black dark:text-white">
-                    {coins.map((coin) => (
-                        <a
-                            key={`${coin.id}-copy`}
-                            href={`https://coinmarketcap.com/currencies/${coin.slug || coin.symbol?.toLowerCase()}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
-                        >
-                            {getIcon(coin.symbol)}
-                            <span className="font-semibold">{coin.symbol}</span>
-                            <span className="text-sm">
-                                ${coin.quote?.USD?.price?.toFixed(2)}
-                            </span>
-                            <div className="flex gap-1 items-center">
-                                <span
-                                    className={`text-sm font-medium ${coin.quote?.USD?.percent_change_24h > 0
-                                        ? "text-green-500"
-                                        : "text-red-500"
-                                        }`}
-                                >
-                                    {coin.quote?.USD?.percent_change_24h > 0 ? <span>▲</span> : <span>▼</span>}
-                                </span>
-                                <span
-                                    className={`text-sm font-medium ${coin.quote?.USD?.percent_change_24h > 0
-                                        ? "text-green-500"
-                                        : "text-red-500"
-                                        }`}
-                                >
-                                    {coin.quote?.USD?.percent_change_24h?.toFixed(2)}%
-                                </span>
-                            </div>
-                        </a>
-                    ))}
-                </div>
-            </div>
-
-            <style>{`
+                <style>{`
         @keyframes marquee {
           from { transform: translateX(0); }
           to { transform: translateX(var(--distance)); }
@@ -187,6 +191,7 @@ export default function Ticker() {
           animation: marquee var(--duration) linear infinite;
         }
       `}</style>
+            </div>}
         </div>
     );
 }
