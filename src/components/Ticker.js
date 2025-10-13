@@ -5,14 +5,16 @@ import { SiLitecoin, SiBinance, SiSolana, SiTether, SiRipple, SiCardano, SiTrove
 import { FaDog } from "react-icons/fa";
 import { AiOutlineDollarCircle } from "react-icons/ai";
 import CurrencySelector from "./CurrencySelector";
+import { useCurrency } from "@/context/CurrencyContext";
 
 export default function Ticker() {
+
+    const { currency, setCurrency } = useCurrency();
     const [coins, setCoins] = useState([]);
     const [paused, setPaused] = useState(false);
     const [loading, setLoading] = useState(true);
     const contentRef = useRef(null);
     const [anim, setAnim] = useState({ distance: 1000, duration: 30 });
-    const [currency, setCurrency] = useState("USD");
 
     useEffect(() => {
         const fetchData = async () => {

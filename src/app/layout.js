@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import { ToastContainer } from "react-toastify";
 import { SearchProvider } from "@/context/SearchContext";
 import { CategoryProvider } from "@/context/CategoryContext";
+import { CurrencyProvider } from "@/context/CurrencyContext";
 import Ticker from '@/components/Ticker';
 
 export const metadata = {
@@ -11,6 +12,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+
   return (
     <html lang="en">
       <body
@@ -18,10 +20,12 @@ export default function RootLayout({ children }) {
       >
         <CategoryProvider>
           <SearchProvider>
-            <ToastContainer />
-            <Navbar />
-            <Ticker />
-            {children}
+            <CurrencyProvider>
+              <ToastContainer />
+              <Navbar />
+              <Ticker />
+              {children}
+            </CurrencyProvider>
           </SearchProvider>
         </CategoryProvider>
       </body>

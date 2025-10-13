@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import ReactCountryFlag from "react-country-flag";
+import { useCurrency } from "@/context/CurrencyContext";
 
-export default function CurrencySelector({ currency, setCurrency }) {
+export default function CurrencySelector() {
+
+    const { currency, setCurrency } = useCurrency();
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef(null);
 

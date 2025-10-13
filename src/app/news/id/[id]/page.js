@@ -10,8 +10,24 @@ import { FaRedditAlien, FaTelegramPlane } from 'react-icons/fa';
 import { faLinkedin, faXTwitter } from '@fortawesome/free-brands-svg-icons';
 import { Loader2, Share2Icon } from 'lucide-react'; import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import parse from "html-react-parser";
+import TickerView from '@/components/TickerView';
+import { useCurrency } from "@/context/CurrencyContext";
 
 const Page = () => {
+
+  const { currency } = useCurrency();
+
+  const options = {
+    replace: (domNode) => {
+      if (domNode.name === "ticker-tag") {
+        const symbol = domNode.attribs?.["data-symbol"] || "BTC";
+        const slug = domNode.attribs?.["data-symbol"] || "bitcoin";
+        return <TickerView currency={currency} node={{ attrs: { symbol, slug } }} />;
+      }
+    },
+  };
+
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [article, setArticle] = useState(null);
@@ -241,8 +257,8 @@ const Page = () => {
                 </div>
               </div>
             </div>
-            <div className="tiptap prose prose-sm sm:prose-lg dark:prose-invert leading-relaxed max-w-none">
-              <div className="article-content" dangerouslySetInnerHTML={{ __html: article.content }} />
+            <div className="tiptap prose prose-sm sm:prose-lg dark:prose-invert max-w-none">
+              {parse(article.content || "", options)}
             </div>
             <div className="flex flex-wrap gap-2 border-y py-4 border-zinc-200 dark:border-zinc-700">
               {article.tags.map((tag, index) => (
