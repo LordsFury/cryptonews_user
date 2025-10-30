@@ -18,13 +18,6 @@ export const Ticker = Node.create({
           "data-symbol": attributes.symbol,
         }),
       },
-      slug: {
-        default: "Bitcoin",
-        parseHTML: (element) => element.getAttribute("data-slug") || "Bitcoin",
-        renderHTML: (attributes) => ({
-          "data-slug": attributes.slug,
-        }),
-      },
     };
   },
 
@@ -47,14 +40,13 @@ export const Ticker = Node.create({
   addCommands() {
     return {
       insertTicker:
-        (symbol, slug) =>
+        (symbol) =>
         ({ chain }) => {
           return chain()
             .insertContent({
               type: this.name,
               attrs: {
                 symbol: symbol?.toUpperCase?.() || symbol,
-                slug,
               },
             })
             .run();

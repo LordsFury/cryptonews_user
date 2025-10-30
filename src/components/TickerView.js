@@ -1,16 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import { useCurrency } from "@/context/CurrencyContext";
+import useExchangeRates from "@/app/hooks/useExchangeRates";
 
 const TickerView = ({ node }) => {
 
   const { currency } = useCurrency();
-  const { symbol, slug } = node.attrs;
+  const { symbol } = node.attrs;
   const [price, setPrice] = useState(null);
   const [change, setChange] = useState(null);
   const [marketCap, setMarketCap] = useState(null);
   const [animate, setAnimate] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [url, setUrl] = useState("");
+  const { rates, ratesLoading } = useExchangeRates();
+
+  const convertPrice = (usdPrice) => {
+    if (!usdPrice) return "--";
+
+    const numericPrice = Number(String(usdPrice).replace(/,/g, ""));
+    if (isNaN(numericPrice)) return "--";
+
+    if (currency === "USD" || !rates[currency]) {
+      return numericPrice.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    const converted = numericPrice * rates[currency];
+    return converted.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
 
   function currencySymbol(curr) {
     switch (curr) {
@@ -35,7 +59,7 @@ const TickerView = ({ node }) => {
   const fetchPrice = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/crypto/ticker?convert=${currency}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/crypto/ticker`,
         {
           method: "GET",
           headers: {
@@ -50,10 +74,10 @@ const TickerView = ({ node }) => {
           (c) => c.symbol.toUpperCase() === symbol.toUpperCase()
         );
         if (coin) {
-          const newPrice = Number(coin.quote?.[currency]?.price).toFixed(2);
-          const newChange = Number(coin.quote?.[currency]?.percent_change_24h);
-          const newMarketCap = coin.quote?.[currency]?.market_cap
-            ? Number(coin.quote?.[currency].market_cap).toLocaleString()
+          const newPrice = Number(coin.price).toFixed(2);
+          const newChange = Number(coin.percent_change_24h);
+          const newMarketCap = coin.market_cap
+            ? Number(coin.market_cap).toLocaleString()
             : null;
 
           if (price && newPrice !== price) {
@@ -63,6 +87,7 @@ const TickerView = ({ node }) => {
           setPrice(newPrice);
           setChange(newChange);
           setMarketCap(newMarketCap);
+          setUrl(coin.coinrankingUrl);
         }
       }
     } catch (err) {
@@ -75,10 +100,9 @@ const TickerView = ({ node }) => {
     fetchPrice();
     const interval = setInterval(fetchPrice, 30000);
     return () => clearInterval(interval);
-  }, [symbol, price, currency]);
+  }, [symbol, price]);
 
   const isUp = change > 0;
-  const url = `https://coinmarketcap.com/currencies/${slug || symbol?.toLowerCase()}`;
 
   return (
     <NodeViewWrapper
@@ -103,14 +127,14 @@ const TickerView = ({ node }) => {
         </span>
         <span className="ml-1">
           {currencySymbol(currency)}
-          {price || "--"}
-          </span>
+          {convertPrice(price) || "--"}
+        </span>
       </span>
       {showTooltip && (
         <span
           className="absolute left-1/2 bottom-full z-50 mb-2 -translate-x-1/2
             bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 
-            border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl px-3 py-2 w-56
+            border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl p-3 w-60
             text-xs text-left transition-all duration-200"
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
@@ -133,7 +157,7 @@ const TickerView = ({ node }) => {
               <span className="font-medium text-gray-700 dark:text-gray-300">
                 Market Cap:
               </span>{" "}
-              {marketCap ? `$${marketCap}` : "--"}
+              {marketCap ? `${currencySymbol(currency)} ${convertPrice(marketCap)}` : "--"}
             </span>
             <button
               className="inline-block w-full text-center bg-gradient-to-r from-blue-800 to-purple-800 hover:from-purple-800 hover:to-blue-800 text-white py-2 rounded-md text-md font-medium cursor-pointer"

@@ -6,10 +6,12 @@ import { FaDog } from "react-icons/fa";
 import { AiOutlineDollarCircle } from "react-icons/ai";
 import CurrencySelector from "./CurrencySelector";
 import { useCurrency } from "@/context/CurrencyContext";
+import useExchangeRates from "@/app/hooks/useExchangeRates";
 
 export default function Ticker() {
 
     const { currency, setCurrency } = useCurrency();
+    const { rates, ratesLoading } = useExchangeRates();
     const [coins, setCoins] = useState([]);
     const [paused, setPaused] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ export default function Ticker() {
             setLoading(true);
             try {
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/crypto/ticker?convert=${currency}`,
+                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/crypto/ticker`,
                     {
                         headers: {
                             source: "user"
@@ -50,6 +52,11 @@ export default function Ticker() {
             setAnim({ distance: width, duration: width / 40 });
         }
     }, [coins]);
+
+    const convertPrice = (usdPrice) => {
+        if (currency === "USD" || !rates[currency]) return usdPrice;
+        return usdPrice * rates[currency];
+    };
 
     const getIcon = (symbol) => {
         switch (symbol.toUpperCase()) {
@@ -120,8 +127,8 @@ export default function Ticker() {
 
     return (
         <div className="w-full pt-15 border-b border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 relative">
-            { !loading && <CurrencySelector currency={currency} setCurrency={setCurrency} />}
-            { !loading && <div className="overflow-hidden"
+            {!loading && <CurrencySelector currency={currency} setCurrency={setCurrency} />}
+            {!loading && <div className="overflow-hidden"
                 onMouseEnter={() => setPaused(true)}
                 onMouseLeave={() => setPaused(false)}>
                 <div className="flex whitespace-nowrap animate-marquee" style={{
@@ -131,26 +138,26 @@ export default function Ticker() {
                 }}>
                     <div ref={contentRef} className="flex items-center text-sm text-black dark:text-white">
                         {coins.map((coin) => (
-                            <a key={coin.id} href={`https://coinmarketcap.com/currencies/${coin.slug || coin.symbol?.toLowerCase()}`}
+                            <a key={coin.id} href={coin.coinrankingUrl}
                                 target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
                                 {getIcon(coin.symbol)}
                                 <span className="font-semibold">{coin.symbol}</span>
                                 <span className="text-sm">
                                     {currencySymbol(currency)}
-                                    {coin.quote?.[currency]?.price?.toFixed(2)}
+                                    {convertPrice(coin.price)?.toFixed(2)}
                                 </span>
                                 <div className="flex gap-1 items-center">
-                                    <span className={`text-sm font-medium ${coin.quote?.[currency]?.percent_change_24h > 0
+                                    <span className={`text-sm font-medium ${coin.percent_change_24h > 0
                                         ? "text-green-500"
                                         : "text-red-500"
                                         }`}>
-                                        {coin.quote?.[currency]?.percent_change_24h > 0 ? <span>▲</span> : <span>▼</span>}
+                                        {coin.percent_change_24h > 0 ? <span>▲</span> : <span>▼</span>}
                                     </span>
-                                    <span className={`text-sm font-medium ${coin.quote?.[currency]?.percent_change_24h > 0
+                                    <span className={`text-sm font-medium ${coin.percent_change_24h > 0
                                         ? "text-green-500"
                                         : "text-red-500"
                                         }`}>
-                                        {coin.quote?.[currency]?.percent_change_24h?.toFixed(2)}%
+                                        {coin.percent_change_24h?.toFixed(2)}%
                                     </span>
                                 </div>
                             </a>
@@ -158,26 +165,26 @@ export default function Ticker() {
                     </div>
                     <div className="flex items-center text-sm text-black dark:text-white">
                         {coins.map((coin) => (
-                            <a key={`${coin.id}-copy`} href={`https://coinmarketcap.com/currencies/${coin.slug || coin.symbol?.toLowerCase()}`}
+                            <a key={`${coin.id}-copy`} href={coin.coinrankingUrl}
                                 target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
                                 {getIcon(coin.symbol)}
                                 <span className="font-semibold">{coin.symbol}</span>
                                 <span className="text-sm">
                                     {currencySymbol(currency)}
-                                    {coin.quote?.[currency]?.price?.toFixed(2)}
+                                    {convertPrice(coin.price)?.toFixed(2)}
                                 </span>
                                 <div className="flex gap-1 items-center">
-                                    <span className={`text-sm font-medium ${coin.quote?.[currency]?.percent_change_24h > 0
+                                    <span className={`text-sm font-medium ${coin.percent_change_24h > 0
                                         ? "text-green-500"
                                         : "text-red-500"
                                         }`} >
-                                        {coin.quote?.[currency]?.percent_change_24h > 0 ? <span>▲</span> : <span>▼</span>}
+                                        {coin.percent_change_24h > 0 ? <span>▲</span> : <span>▼</span>}
                                     </span>
-                                    <span className={`text-sm font-medium ${coin.quote?.[currency]?.percent_change_24h > 0
+                                    <span className={`text-sm font-medium ${coin.percent_change_24h > 0
                                         ? "text-green-500"
                                         : "text-red-500"
                                         }`}>
-                                        {coin.quote?.[currency]?.percent_change_24h?.toFixed(2)}%
+                                        {coin.percent_change_24h?.toFixed(2)}%
                                     </span>
                                 </div>
                             </a>
