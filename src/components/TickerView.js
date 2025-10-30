@@ -74,11 +74,9 @@ const TickerView = ({ node }) => {
           (c) => c.symbol.toUpperCase() === symbol.toUpperCase()
         );
         if (coin) {
-          const newPrice = Number(coin.price).toFixed(2);
+          const newPrice = coin.price ? Number(coin.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
           const newChange = Number(coin.percent_change_24h);
-          const newMarketCap = coin.market_cap
-            ? Number(coin.market_cap).toLocaleString()
-            : null;
+          const newMarketCap = coin.market_cap ? Number(coin.market_cap).toLocaleString() : null;
 
           if (price && newPrice !== price) {
             setAnimate(true);

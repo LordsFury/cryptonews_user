@@ -54,9 +54,20 @@ export default function Ticker() {
     }, [coins]);
 
     const convertPrice = (usdPrice) => {
-        if (currency === "USD" || !rates[currency]) return usdPrice;
-        return usdPrice * rates[currency];
+        if (!usdPrice) return "--";
+
+        const numericPrice = Number(usdPrice);
+        if (isNaN(numericPrice)) return "--";
+        let converted = numericPrice;
+        if (currency !== "USD" && rates[currency]) {
+            converted = numericPrice * rates[currency];
+        }
+        return converted.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
     };
+
 
     const getIcon = (symbol) => {
         switch (symbol.toUpperCase()) {
@@ -144,7 +155,7 @@ export default function Ticker() {
                                 <span className="font-semibold">{coin.symbol}</span>
                                 <span className="text-sm">
                                     {currencySymbol(currency)}
-                                    {convertPrice(coin.price)?.toFixed(2)}
+                                    {convertPrice(coin.price)}
                                 </span>
                                 <div className="flex gap-1 items-center">
                                     <span className={`text-sm font-medium ${coin.percent_change_24h > 0
@@ -171,7 +182,7 @@ export default function Ticker() {
                                 <span className="font-semibold">{coin.symbol}</span>
                                 <span className="text-sm">
                                     {currencySymbol(currency)}
-                                    {convertPrice(coin.price)?.toFixed(2)}
+                                    {convertPrice(coin.price)}
                                 </span>
                                 <div className="flex gap-1 items-center">
                                     <span className={`text-sm font-medium ${coin.percent_change_24h > 0
