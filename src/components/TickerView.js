@@ -59,7 +59,7 @@ const TickerView = ({ node }) => {
   const fetchPrice = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/crypto/ticker`,
+        `${process.env.NEXT_PUBLIC_CRYPTO_DATA_URL}/api/crypto/top/10`,
         {
           method: "GET",
           headers: {
