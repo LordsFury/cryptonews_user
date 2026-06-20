@@ -137,7 +137,7 @@ export default function Ticker() {
     }
 
     return (
-        <div className="w-full pt-15 border-b border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 relative">
+        <div className="w-full pt-16 border-b border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 relative">
             {!loading && <CurrencySelector currency={currency} setCurrency={setCurrency} />}
             {!loading && <div className="overflow-hidden"
                 onMouseEnter={() => setPaused(true)}

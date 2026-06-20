@@ -1,6 +1,6 @@
 "use client";
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { faEye } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as solidHeart } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as regularHeart } from "@fortawesome/free-regular-svg-icons";
@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useParams } from 'next/navigation';
 import { FaRedditAlien, FaTelegramPlane } from 'react-icons/fa';
 import { faLinkedin, faXTwitter } from '@fortawesome/free-brands-svg-icons';
-import { Loader2, Share2Icon } from 'lucide-react'; import Link from 'next/link';
+import { Loader2 } from 'lucide-react'; import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import parse from "html-react-parser";
 import TickerView from '@/components/TickerView';
@@ -33,8 +33,8 @@ const Page = () => {
   const [article, setArticle] = useState(null);
   const [liked, setLiked] = useState(false);
   const [shared, setShared] = useState(false);
-  const [trendingArticles, setTrendingArticles] = useState(null);
-  const [relatedArticles, setRelatedArticles] = useState(null);
+  const [trendingArticles, setTrendingArticles] = useState([]);
+  const [relatedArticles, setRelatedArticles] = useState([]);
 
   const getArticle = async () => {
     setLoading(true);
@@ -44,8 +44,8 @@ const Page = () => {
     });
     const data = await response.json();
     setArticle(data.Article);
-    setTrendingArticles(data.trendingArticles);
-    setRelatedArticles(data.relatedArticles);
+    setTrendingArticles(data.trendingArticles || []);
+    setRelatedArticles(data.relatedArticles || []);
     setLoading(false);
   }
 
@@ -84,6 +84,7 @@ const Page = () => {
   };
 
   useEffect(() => {
+    if (!id) return;
     getArticle();
     addView();
     try {
@@ -97,6 +98,18 @@ const Page = () => {
     } catch (err) {
       console.warn("Failed to parse likedNews from localStorage", err);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+
+    return () => {
+      window.history.scrollRestoration = previousScrollRestoration;
+    };
   }, []);
 
   const toggleLike = async () => {
@@ -162,7 +175,7 @@ const Page = () => {
 
   const handleShare = async (e, platform) => {
     e.preventDefault();
-    const articleUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/news/${article._id}`;
+    const articleUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/news/id/${article._id}`;
     const articleTitle = article.title || "Check out this article";
 
     let platformUrl = "";
@@ -183,12 +196,12 @@ const Page = () => {
   };
 
   return (
-    <div className="min-h-screen pt-6 bg-white dark:bg-zinc-900 py-10 px-4 sm:px-8 md:px-16 text-zinc-800 dark:text-zinc-100">
+    <div className="min-h-screen pt-6 bg-white dark:bg-zinc-900 py-10 px-4 sm:px-8 md:px-10 lg:px-12 xl:px-8 2xl:px-6 text-zinc-800 dark:text-zinc-100">
       {loading && <div className="flex justify-center pt-20 p-6 bg-white dark:bg-zinc-900 h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>}
-      {!loading && article && <div className='flex gap-8'>
-        <div className='flex flex-col flex-1 w-2/3 px-4 sm:px-6'>
+      {!loading && article && <div className='mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start'>
+        <div className='flex flex-col min-w-0 px-4 sm:px-6'>
           <div className="space-y-4">
             <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight">
               {article.title}
@@ -213,55 +226,62 @@ const Page = () => {
                 </div>
               </div>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-4 mx-1 mt-8 mb-8 text-gray-600 dark:text-gray-300">
-              <div className='flex items-center gap-4'>
-                <span className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60 mx-1 mt-8 mb-8 text-gray-600 dark:text-gray-300">
+              <div className='flex items-center gap-5 text-sm sm:text-base'>
+                <span className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
                   <FontAwesomeIcon icon={faEye} size='md' />
-                  <span className="text-md">{article.views}</span>
+                  <span className="font-medium">{article.views}</span>
                 </span>
-                <span className="flex items-center gap-2 transition">
-                  <button className='focus:outline-none' onClick={toggleLike}>
-                    <FontAwesomeIcon size='lg'
-                      icon={liked ? solidHeart : regularHeart}
-                      className={`cursor-pointer transition-all duration-300 ease-in-out ${liked ? "text-red-600 scale-105" : "text-gray-500 scale-100"}`} />
-                  </button>
-                  <span className="text-lg">{article.likes}</span>
-                </span>
+                <button
+                  className='inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 shadow-sm ring-1 ring-zinc-200 transition hover:-translate-y-0.5 hover:bg-gradient-to-r hover:from-blue-800 hover:to-purple-800 hover:text-white hover:shadow-md dark:bg-zinc-950 dark:ring-zinc-800 dark:hover:text-white'
+                  onClick={toggleLike}
+                >
+                  <FontAwesomeIcon
+                    size='lg'
+                    icon={liked ? solidHeart : regularHeart}
+                    className={`transition-all duration-300 ease-in-out ${liked ? "text-red-500 scale-105" : "text-gray-500 scale-100"} group-hover:text-white`}
+                  />
+                  <span className="font-medium text-gray-800 dark:text-gray-100">
+                    {Array.isArray(article.likes) ? article.likes.length : (article.likes || 0)}
+                  </span>
+                </button>
               </div>
-              <div className="flex items-center flex-wrap gap-4">
-                <div className='flex items-center gap-3 mr-6'>
-                  <Share2Icon size={18} />
-                  <h1 className="text-md font-semibold text-gray-800 dark:text-gray-200">
-                    Share Article
-                  </h1>
-                </div>
-                <div className='bg-zinc-900 dark:bg-zinc-100 p-1 text-white dark:text-zinc-900 rounded-md flex items-center justify-center transition-all duration-200 hover:scale-110'>
-                  <button onClick={(e) => handleShare(e, 'X')} className="cursor-pointer">
-                    <FontAwesomeIcon icon={faXTwitter} size="lg" />
-                  </button>
-                </div>
-                <div className='bg-zinc-900 dark:bg-zinc-100 p-1 text-white dark:text-zinc-900 rounded-md flex items-center justify-center transition-all duration-200 hover:scale-110'>
-                  <button onClick={(e) => handleShare(e, 'telegram')} className="cursor-pointer">
-                    <FaTelegramPlane size={24} />
-                  </button>
-                </div>
-                <div className='bg-zinc-900 dark:bg-zinc-100 p-1 text-white dark:text-zinc-900 rounded-md flex items-center hover:scale-110 transition-all duration-200 justify-center'>
-                  <button onClick={(e) => handleShare(e, 'reddit')} className="cursor-pointer">
-                    <FaRedditAlien size={24} />
-                  </button>
-                </div>
-                <div className='bg-zinc-900 dark:bg-zinc-100 p-1 text-white dark:text-zinc-900 rounded-md flex items-center hover:scale-110 transition-all duration-200 justify-center'>
-                  <button onClick={(e) => handleShare(e, 'linkedin')} className="cursor-pointer">
-                    <FontAwesomeIcon icon={faLinkedin} size="lg" />
-                  </button>
-                </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={(e) => handleShare(e, 'X')}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  aria-label="Share on X"
+                >
+                  <FontAwesomeIcon icon={faXTwitter} size="lg" />
+                </button>
+                <button
+                  onClick={(e) => handleShare(e, 'telegram')}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#0088cc] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  aria-label="Share on Telegram"
+                >
+                  <FaTelegramPlane size={20} />
+                </button>
+                <button
+                  onClick={(e) => handleShare(e, 'reddit')}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#FF4500] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  aria-label="Share on Reddit"
+                >
+                  <FaRedditAlien size={20} />
+                </button>
+                <button
+                  onClick={(e) => handleShare(e, 'linkedin')}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#0077b5] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  aria-label="Share on LinkedIn"
+                >
+                  <FontAwesomeIcon icon={faLinkedin} size="lg" />
+                </button>
               </div>
             </div>
             <div className="tiptap prose prose-sm sm:prose-lg dark:prose-invert max-w-none">
               {parse(article.content || "", options)}
             </div>
             <div className="flex flex-wrap gap-2 border-y py-4 border-zinc-200 dark:border-zinc-700">
-              {article.tags.map((tag, index) => (
+              {(article.tags || []).map((tag, index) => (
                 <span
                   key={index}
                   className="bg-zinc-300 dark:bg-zinc-700 text-black dark:text-white px-2 py-1 text-sm rounded-sm shadow-sm"

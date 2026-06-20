@@ -10,7 +10,7 @@ import Footer from '@/components/Footer';
 
 const Page = () => {
 
-  const [articles, setArticles] = useState(null);
+  const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false)
 
@@ -26,6 +26,8 @@ const Page = () => {
       const data = await response.json();
       if (data.success) {
         setArticles(data.articles || []);
+      } else {
+        setArticles([]);
       }
     } catch (error) {
       console.error("Error fetching articles:", error);
@@ -131,7 +133,7 @@ const Page = () => {
           </div>
           <div className="mt-6 text-center">
             <Link
-              href={`/news/category=LatestNews`}
+              href={`/news/Latest News`}
               className="inline-flex items-center gap-1 px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-800 to-purple-800 rounded-lg shadow-md hover:from-purple-800 hover:to-blue-800 transition-all duration-300">
               <span>See More Trending News</span>
               <ArrowRight />

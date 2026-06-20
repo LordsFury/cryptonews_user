@@ -240,7 +240,7 @@ const Navbar = () => {
               </li>
             </ul>
           </div>
-          <Link onClick={toggleMenu} href="/admin/create" className="block text-xl font-medium py-4 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-800">
+          <Link onClick={toggleMenu} href="/about" className="block text-xl font-medium py-4 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-800">
             About
           </Link>
           <button

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import { useCurrency } from "@/context/CurrencyContext";
 import useExchangeRates from "@/app/hooks/useExchangeRates";
@@ -13,7 +13,7 @@ const TickerView = ({ node }) => {
   const [animate, setAnimate] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [url, setUrl] = useState("");
-  const { rates, ratesLoading } = useExchangeRates();
+  const { rates } = useExchangeRates();
 
   const convertPrice = (usdPrice) => {
     if (!usdPrice) return "--";
@@ -56,7 +56,7 @@ const TickerView = ({ node }) => {
     }
   }
 
-  const fetchPrice = async () => {
+  const fetchPrice = useCallback(async () => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_CRYPTO_DATA_URL}/api/crypto/top/10`,
@@ -78,11 +78,13 @@ const TickerView = ({ node }) => {
           const newChange = Number(coin.percent_change_24h);
           const newMarketCap = coin.market_cap ? Number(coin.market_cap).toLocaleString() : null;
 
-          if (price && newPrice !== price) {
-            setAnimate(true);
-            setTimeout(() => setAnimate(false), 400);
-          }
-          setPrice(newPrice);
+          setPrice((prevPrice) => {
+            if (prevPrice && newPrice !== prevPrice) {
+              setAnimate(true);
+              setTimeout(() => setAnimate(false), 400);
+            }
+            return newPrice;
+          });
           setChange(newChange);
           setMarketCap(newMarketCap);
           setUrl(coin.coinrankingUrl);
@@ -91,14 +93,14 @@ const TickerView = ({ node }) => {
     } catch (err) {
       console.error("Error fetching ticker:", err);
     }
-  };
+  }, [symbol]);
 
   useEffect(() => {
     if (!symbol) return;
     fetchPrice();
     const interval = setInterval(fetchPrice, 30000);
     return () => clearInterval(interval);
-  }, [symbol, price]);
+  }, [symbol, fetchPrice]);
 
   const isUp = change > 0;
 

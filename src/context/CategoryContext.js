@@ -4,7 +4,7 @@ import { createContext, useContext, useState } from "react";
 const CategoryContext = createContext();
 
 export const CategoryProvider = ({ children }) => {
-  const [category, setCategory] = useState(null);
+  const [category, setCategory] = useState("Latest News");
 
   return (
     <CategoryContext.Provider value={{ category, setCategory }}>

@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useSearch } from "@/context/SearchContext";
 import { useCategory } from "@/context/CategoryContext";
+import { useParams } from "next/navigation";
 import { ArrowDown, ArrowUp, Loader2 } from "lucide-react";
 import NewsItem from "@/components/NewsItem";
 import Footer from "@/components/Footer";
@@ -9,22 +10,27 @@ import Sidebar from "@/components/Sidebar";
 
 const Page = () => {
     const { searchQuery } = useSearch();
-    const { category } = useCategory();
+    const { category, setCategory } = useCategory();
+    const params = useParams();
+    const headingRef = useRef(null);
+    const [lineWidth, setLineWidth] = useState(0);
 
     const [articles, setArticles] = useState([]);
     const [displayArticles, setDisplayArticles] = useState([]);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
     const [initialized, setInitialized] = useState(false);
-    const [trendingArticles, setTrendingArticles] = useState(null);
-    const limit = 3;
+    const [trendingArticles, setTrendingArticles] = useState([]);
+    const limit = 10;
+
+    const activeCategory = decodeURIComponent(params?.category || "") || category || "Latest News";
 
     const getArticles = async () => {
         try {
             setLoading(true);
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_BACKEND_URL
-                }/api/articles/?category=${encodeURIComponent(category)}`,
+                }/api/articles/?category=${encodeURIComponent(activeCategory)}`,
                 {
                     method: "GET",
                     headers: { source: "user" },
@@ -48,7 +54,19 @@ const Page = () => {
     useEffect(() => {
         getArticles();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [category]);
+    }, [activeCategory]);
+
+    useEffect(() => {
+        if (activeCategory && category !== activeCategory) {
+            setCategory(activeCategory);
+        }
+    }, [activeCategory, category, setCategory]);
+
+    useEffect(() => {
+        if (headingRef.current) {
+            setLineWidth(headingRef.current.offsetWidth);
+        }
+    }, [activeCategory]);
 
     const filtered = useMemo(() => {
         const q = (searchQuery || "").toLowerCase();
@@ -99,13 +117,13 @@ const Page = () => {
                     </p>
                 </div>
             )}
-            {initialized && displayArticles.length > 0 && <div className="flex justify-between gap-8 pt-6 px-4 sm:px-6 lg:px-20">
+            {initialized && displayArticles.length > 0 && <div className="flex justify-between gap-8 pt-6 px-4 sm:px-6 lg:px-10">
                 <div className="lg:max-w-2/3 w-full px-4 sm:px-8 md:px-8 lg:px-2 xl:px-2">
                     <div className="mb-6">
-                        <h1 className="text-xl sm:text-3xl font-semibold text-black dark:text-white">
-                            Latest {category !== "Latest News" && category} News
+                        <h1 ref={headingRef} className="text-xl sm:text-3xl font-semibold text-black dark:text-white">
+                            Latest {activeCategory !== "Latest News" && activeCategory} News
                         </h1>
-                        <span className="block h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-800 to-purple-800 mt-2"></span>
+                        <div style={{ width: `${Math.max(lineWidth, 100)}px` }} className="h-1 rounded-full bg-gradient-to-r from-blue-800 via-purple-800 to-blue-800 mt-2"></div>
                     </div>
                     <ul className="flex flex-col gap-12 md:gap-8 lg:gap-8 xl:gap-8">
                         {displayArticles.map((article) => (
