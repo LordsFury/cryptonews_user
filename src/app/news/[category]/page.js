@@ -7,6 +7,9 @@ import { ArrowDown, ArrowUp, Loader2 } from "lucide-react";
 import NewsItem from "@/components/NewsItem";
 import Footer from "@/components/Footer";
 import Sidebar from "@/components/Sidebar";
+import { usePlacementAds } from "@/hooks/usePlacementAds";
+import { interleaveWithAds } from "@/utils/interleaveAds";
+import NativeAdListItem from "@/components/ads/NativeAdListItem";
 
 const Page = () => {
     const { searchQuery } = useSearch();
@@ -22,6 +25,7 @@ const Page = () => {
     const [initialized, setInitialized] = useState(false);
     const [trendingArticles, setTrendingArticles] = useState([]);
     const limit = 10;
+    const { ads: feedAds } = usePlacementAds('article_feed');
 
     const activeCategory = decodeURIComponent(params?.category || "") || category || "Latest News";
 
@@ -100,6 +104,13 @@ const Page = () => {
         setHasMore(true);
     }
 
+    const feedItems = useMemo(() => {
+        if (searchQuery?.trim()) {
+            return displayArticles.map((article) => ({ type: 'article', data: article }));
+        }
+        return interleaveWithAds(displayArticles, feedAds, { interval: 5, startAfter: 5 });
+    }, [displayArticles, feedAds, searchQuery]);
+
     return (
         <div className="bg-white dark:bg-zinc-900 min-h-screen">
             {loading && !initialized && <div className="flex justify-center pt-20 p-6">
@@ -117,8 +128,8 @@ const Page = () => {
                     </p>
                 </div>
             )}
-            {initialized && displayArticles.length > 0 && <div className="flex justify-between gap-8 pt-6 px-4 sm:px-6 lg:px-10">
-                <div className="lg:max-w-2/3 w-full px-4 sm:px-8 md:px-8 lg:px-2 xl:px-2">
+            {initialized && displayArticles.length > 0 && <div className="flex flex-col gap-8 pt-6 px-4 sm:px-6 lg:flex-row lg:items-stretch lg:justify-between lg:px-10">
+                <div className="min-w-0 w-full lg:max-w-2/3 px-4 sm:px-8 md:px-8 lg:px-2 xl:px-2">
                     <div className="mb-6">
                         <h1 ref={headingRef} className="text-xl sm:text-3xl font-semibold text-black dark:text-white">
                             Latest {activeCategory !== "Latest News" && activeCategory} News
@@ -126,9 +137,13 @@ const Page = () => {
                         <div style={{ width: `${Math.max(lineWidth, 100)}px` }} className="h-1 rounded-full bg-gradient-to-r from-blue-800 via-purple-800 to-blue-800 mt-2"></div>
                     </div>
                     <ul className="flex flex-col gap-12 md:gap-8 lg:gap-8 xl:gap-8">
-                        {displayArticles.map((article) => (
-                            <NewsItem key={article._id} article={article} />
-                        ))}
+                        {feedItems.map((item) =>
+                            item.type === 'ad' ? (
+                                <NativeAdListItem key={item.key} ad={item.data} />
+                            ) : (
+                                <NewsItem key={item.data._id} article={item.data} />
+                            )
+                        )}
                     </ul>
                     <div className="flex justify-center lg:justify-end lg:mr-20 items-center mt-8">
                         <button onClick={hasMore ? handleShowMore : handleShowLess} className="flex items-center gap-1 px-3 py-2 cursor-pointer text-sm bg-zinc-300 hover:bg-zinc-400 dark:bg-zinc-700 dark:hover:bg-zinc-600 dark:text-white text-black font-medium rounded-lg shadow-md">
