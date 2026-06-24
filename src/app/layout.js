@@ -5,6 +5,7 @@ import { SearchProvider } from "@/context/SearchContext";
 import { CategoryProvider } from "@/context/CategoryContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import Ticker from '@/components/Ticker';
+import TopBarAd from '@/components/TopBarAd';
 
 export const metadata = {
   title: "Crypto News",
@@ -24,7 +25,10 @@ export default function RootLayout({ children }) {
               <ToastContainer />
               <Navbar />
               <Ticker />
-              {children}
+              <main className="relative">
+                <TopBarAd />
+                {children}
+              </main>
             </CurrencyProvider>
           </SearchProvider>
         </CategoryProvider>

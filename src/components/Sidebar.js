@@ -1,77 +1,23 @@
 "use client";
-import { useEffect, useState } from 'react';
 import { formatDistanceToNow } from "date-fns";
-import Image from 'next/image';
-import Link from 'next/link';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye } from '@fortawesome/free-solid-svg-icons';
+import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye } from "@fortawesome/free-solid-svg-icons";
+import { usePlacementAds } from "@/hooks/usePlacementAds";
+import AdMedia from "@/components/ads/AdMedia";
 
-const Sidebar = ({ trendingArticles = [] }) => {
-  const [ads, setAds] = useState([]);
-  const [adsLoading, setAdsLoading] = useState(true);
+const Sidebar = ({ trendingArticles = [], excludeAdIds = [] }) => {
+  const { ads, loading: adsLoading } = usePlacementAds("sidebar");
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchAds = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ads?placement=sidebar`, {
-          method: 'GET',
-        });
-        const data = await response.json();
-        if (isMounted && data.success) {
-          setAds(data.ads || []);
-        }
-      } catch (error) {
-        console.error('Error fetching ads:', error);
-        if (isMounted) {
-          setAds([]);
-        }
-      } finally {
-        if (isMounted) {
-          setAdsLoading(false);
-        }
-      }
-    };
-
-    fetchAds();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const renderAdMedia = (ad) => {
-    if (ad.mediaType === 'video') {
-      return (
-        <video
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          src={ad.mediaUrl}
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
-      );
-    }
-
-    return (
-      <Image
-        src={ad.mediaUrl}
-        alt={ad.title}
-        fill
-        unoptimized
-        sizes="(max-width: 1024px) 100vw, 360px"
-        className="object-cover transition duration-500 group-hover:scale-105"
-      />
-    );
-  };
+  const sponsoredAds = ads
+    .filter((ad) => !excludeAdIds.includes(String(ad._id)))
+    .slice(0, 2);
 
   return (
-    <aside className="hidden lg:block w-[360px] shrink-0 self-start lg:sticky lg:top-24">
-      <div className="space-y-8 border-l border-zinc-200 pl-4 dark:border-zinc-800">
-        <section className="space-y-4">
-          <div className="flex items-center justify-between pr-1">
+    <aside className="flex w-full shrink-0 flex-col lg:w-[360px] lg:self-stretch">
+      <div className="flex h-full flex-col border-zinc-200 lg:border-l lg:pl-4 dark:border-zinc-800">
+        <section className="shrink-0 space-y-4 pr-1" aria-label="Trending news">
+          <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
               Trending News
             </h2>
@@ -79,14 +25,11 @@ const Sidebar = ({ trendingArticles = [] }) => {
               Live
             </span>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 pr-1">
-            Fast-moving stories and the biggest market updates.
-          </p>
           <div className="space-y-3">
             {trendingArticles.slice(0, 5).map((article) => (
               <article
                 key={article._id}
-                className="group border-b border-zinc-200 pb-3 pr-1 transition last:border-b-0 dark:border-zinc-800"
+                className="group border-b border-zinc-200 pb-3 transition last:border-b-0 dark:border-zinc-800"
               >
                 <Link href={`/news/id/${article._id}`}>
                   <h3 className="text-sm font-medium leading-snug text-gray-900 line-clamp-2 transition group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-800 group-hover:to-purple-800 group-hover:bg-clip-text dark:text-gray-100">
@@ -106,78 +49,72 @@ const Sidebar = ({ trendingArticles = [] }) => {
               </article>
             ))}
             {trendingArticles.length === 0 && (
-              <div className="border-b border-zinc-200 pb-3 pr-1 text-sm text-gray-500 dark:border-zinc-800 dark:text-gray-400">
+              <div className="border-b border-zinc-200 pb-3 text-sm text-gray-500 dark:border-zinc-800 dark:text-gray-400">
                 No trending stories right now.
               </div>
             )}
           </div>
-          <div className="border-b border-zinc-200 dark:border-zinc-800"></div>
         </section>
 
-        <section className="space-y-3 pr-1">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
-              Sponsored
-            </p>
-            <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
-              Ads
-            </span>
-          </div>
-          <div className="space-y-4">
-            {adsLoading && (
-              <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 p-5 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-                Loading sponsor placements...
-              </div>
-            )}
-
-            {!adsLoading && ads.slice(0, 2).map((ad) => (
-              <article key={ad._id} className="group overflow-hidden rounded-3xl border border-zinc-200 bg-gradient-to-br from-white via-zinc-50 to-zinc-100 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-950">
-                <a href={ad.link} target="_blank" rel="noopener noreferrer" className="block">
-                  <div className="relative aspect-[16/10] overflow-hidden bg-zinc-900">
-                    {renderAdMedia(ad)}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                    <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-900 shadow-sm backdrop-blur dark:bg-zinc-950/90 dark:text-white">
-                      Sponsored
-                    </div>
-                  </div>
-                  <div className="space-y-3 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-800 group-hover:via-purple-700 group-hover:to-blue-800 group-hover:bg-clip-text dark:text-white">
-                        {ad.title}
-                      </h3>
-                      <span className="shrink-0 rounded-full bg-zinc-900 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white dark:bg-zinc-100 dark:text-zinc-900">
-                        Ad
-                      </span>
-                    </div>
-                    <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                      {ad.description}
-                    </p>
-                    <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-800 via-purple-800 to-blue-800 px-4 py-2 text-sm font-semibold text-white shadow-md transition group-hover:translate-x-1">
-                      <span>{ad.ctaText || 'Learn More'}</span>
-                      <span aria-hidden="true">→</span>
-                    </div>
-                  </div>
-                </a>
-              </article>
-            ))}
-
-            {!adsLoading && ads.length === 0 && (
-              <div className="rounded-3xl border border-zinc-200 bg-gradient-to-br from-white via-zinc-50 to-zinc-100 p-5 shadow-sm dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-950">
-                <div className="rounded-2xl border border-dashed border-zinc-300 bg-white/70 p-5 text-center dark:border-zinc-700 dark:bg-zinc-950/50">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">
-                    Sponsored
-                  </p>
-                  <p className="mt-2 text-base font-medium text-zinc-900 dark:text-white">
-                    Your brand can appear here.
-                  </p>
-                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                    Publish an active sidebar ad from the admin panel to fill this spot.
-                  </p>
+        {(adsLoading || sponsoredAds.length > 0) && (
+          <section
+            className="mt-8 shrink-0 space-y-3 border-t border-zinc-200 pt-6 pr-1 lg:sticky lg:top-24 lg:self-start dark:border-zinc-800"
+            aria-label="Sponsored advertisements"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+                Advertisement
+              </p>
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-400">
+                Ad
+              </span>
+            </div>
+            <div className="space-y-3">
+              {adsLoading && (
+                <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+                  Loading...
                 </div>
-              </div>
-            )}
-          </div>
-        </section>
+              )}
+
+              {!adsLoading &&
+                sponsoredAds.map((ad) => (
+                  <article
+                    key={ad._id}
+                    className="group overflow-hidden rounded-xl border border-amber-200/60 bg-white shadow-sm transition hover:border-amber-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-none dark:hover:border-zinc-600"
+                  >
+                    <a
+                      href={ad.link}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                      className="block"
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                        <AdMedia
+                          ad={ad}
+                          className="object-cover transition duration-300 group-hover:scale-[1.02]"
+                          sizes="(max-width: 1024px) 100vw, 360px"
+                        />
+                        <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+                          Sponsored
+                        </span>
+                      </div>
+                      <div className="space-y-2 border-t border-zinc-100 p-4 dark:border-zinc-800">
+                        <h3 className="text-[15px] font-semibold leading-snug text-zinc-900 transition group-hover:text-blue-800 dark:text-zinc-100 dark:group-hover:text-amber-400">
+                          {ad.title}
+                        </h3>
+                        <p className="text-sm leading-relaxed text-zinc-600 line-clamp-2 dark:text-zinc-400">
+                          {ad.description}
+                        </p>
+                        <p className="pt-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                          {ad.ctaText || "Learn more"} →
+                        </p>
+                      </div>
+                    </a>
+                  </article>
+                ))}
+            </div>
+          </section>
+        )}
       </div>
     </aside>
   );

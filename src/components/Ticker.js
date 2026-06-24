@@ -69,6 +69,20 @@ export default function Ticker() {
     };
 
 
+    const renderCoinIcon = (coin) => {
+        if (coin?.image) {
+            return (
+                <img
+                    src={coin.image}
+                    alt={`${coin.symbol} logo`}
+                    className="h-5 w-5 shrink-0 rounded-full object-cover"
+                    loading="lazy"
+                />
+            );
+        }
+        return getIcon(coin.symbol);
+    };
+
     const getIcon = (symbol) => {
         switch (symbol.toUpperCase()) {
             case "BTC":
@@ -151,7 +165,7 @@ export default function Ticker() {
                         {coins.map((coin) => (
                             <a key={coin.id} href={coin.coinrankingUrl}
                                 target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
-                                {getIcon(coin.symbol)}
+                                {renderCoinIcon(coin)}
                                 <span className="font-semibold">{coin.symbol}</span>
                                 <span className="text-sm">
                                     {currencySymbol(currency)}
@@ -178,7 +192,7 @@ export default function Ticker() {
                         {coins.map((coin) => (
                             <a key={`${coin.id}-copy`} href={coin.coinrankingUrl}
                                 target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
-                                {getIcon(coin.symbol)}
+                                {renderCoinIcon(coin)}
                                 <span className="font-semibold">{coin.symbol}</span>
                                 <span className="text-sm">
                                     {currencySymbol(currency)}

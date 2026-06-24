@@ -196,12 +196,15 @@ const Page = () => {
   };
 
   return (
-    <div className="min-h-screen pt-6 bg-white dark:bg-zinc-900 py-10 px-4 sm:px-8 md:px-10 lg:px-12 xl:px-8 2xl:px-6 text-zinc-800 dark:text-zinc-100">
-      {loading && <div className="flex justify-center pt-20 p-6 bg-white dark:bg-zinc-900 h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>}
-      {!loading && article && <div className='mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start'>
-        <div className='flex flex-col min-w-0 px-4 sm:px-6'>
+    <div className="min-h-screen bg-white pt-6 pb-10 text-zinc-800 dark:bg-zinc-900 dark:text-zinc-100">
+      {loading && (
+        <div className="flex h-screen justify-center bg-white p-6 pt-20 dark:bg-zinc-900">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      )}
+      {!loading && article && (
+        <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:flex-row lg:items-stretch lg:gap-8 lg:px-8">
+          <div className="min-w-0 flex-1 overflow-x-hidden">
           <div className="space-y-4">
             <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight">
               {article.title}
@@ -293,7 +296,7 @@ const Page = () => {
           </div>
           {relatedArticles.length > 0 && <div>
             <h1 className='mt-10 text-2xl font-medium'>Read More</h1>
-            <div className='grid grid-cols-1 mt-4 sm:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-4'>
+            <div className='grid grid-cols-1 gap-y-6 gap-4 mt-4 sm:grid-cols-2'>
               {relatedArticles.map((article) => (
                 <Link
                   key={article._id}
@@ -315,10 +318,10 @@ const Page = () => {
                 </Link>
               ))}
             </div></div>}
+          </div>
+          <Sidebar trendingArticles={trendingArticles} />
         </div>
-        <Sidebar trendingArticles={trendingArticles} />
-      </div>
-      }
+      )}
     </div>
   );
 };

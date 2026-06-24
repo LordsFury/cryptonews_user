@@ -4,15 +4,26 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from "date-fns";
 import Image from 'next/image'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link';
 import Footer from '@/components/Footer';
+import { usePlacementAds } from '@/hooks/usePlacementAds';
+import { interleaveWithAds } from '@/utils/interleaveAds';
+import NativeAdGridCard from '@/components/ads/NativeAdGridCard';
 
 const Page = () => {
 
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false)
+  const { ads: homepageAds } = usePlacementAds('homepage');
+
+  const sideListArticles = articles.slice(1, 5);
+
+  const gridItems = useMemo(
+    () => interleaveWithAds(articles.slice(5, 14), homepageAds, { interval: 6, startAfter: 6 }),
+    [articles, homepageAds]
+  );
 
   const getArticles = async () => {
     try {
@@ -92,41 +103,41 @@ const Page = () => {
             )}
             <div className="lg:w-1/2 w-full flex flex-col justify-between">
               <ul className="space-y-4">
-                {articles.slice(1, 5).map((article) => (
-                  <li key={article._id} className="flex items-center pb-6 border-b border-zinc-200 dark:border-zinc-800">
-                    <div className="flex-1 mr-2">
+                {sideListArticles.map((article) => (
+                    <li key={article._id} className="flex items-center pb-6 border-b border-zinc-200 dark:border-zinc-800">
+                      <div className="flex-1 mr-2">
+                        <Link href={`/news/id/${article._id}`}>
+                          <h3 className="text-sm sm:text-lg text-gray-900 dark:text-gray-100 font-semibold hover:underline line-clamp-2">
+                            {article.title}
+                          </h3>
+                        </Link>
+                        <div className='flex flex-col gap-2'>
+                          <div className="text-sm flex flex-col gap-2 text-gray-500 dark:text-gray-300">
+                            <span>
+                              {formatDistanceToNow(new Date(article.publishedAt), {
+                                addSuffix: true,
+                              })}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <FontAwesomeIcon icon={faEye} /> {article.views}
+                            </span>
+                          </div>
+                          <div className="inline-flex items-center bg-gradient-to-r from-blue-800 to-purple-800 text-white rounded-md text-xs font-medium px-2 py-1 shadow w-fit">
+                            {article.category?.name}
+                          </div>
+                        </div>
+                      </div>
                       <Link href={`/news/id/${article._id}`}>
-                        <h3 className="text-sm sm:text-lg text-gray-900 dark:text-gray-100 font-semibold hover:underline line-clamp-2">
-                          {article.title}
-                        </h3>
+                        <div className="relative flex-shrink-0 w-32 h-24 sm:w-44 sm:h-32 overflow-hidden">
+                          <Image
+                            src={article.coverImage || "/images/img.avif"}
+                            alt={article.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
                       </Link>
-                      <div className='flex flex-col gap-2'>
-                        <div className="text-sm flex flex-col gap-2 text-gray-500 dark:text-gray-300">
-                          <span>
-                            {formatDistanceToNow(new Date(article.publishedAt), {
-                              addSuffix: true,
-                            })}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FontAwesomeIcon icon={faEye} /> {article.views}
-                          </span>
-                        </div>
-                        <div className="inline-flex items-center bg-gradient-to-r from-blue-800 to-purple-800 text-white rounded-md text-xs font-medium px-2 py-1 shadow w-fit">
-                          {article.category?.name}
-                        </div>
-                      </div>
-                    </div>
-                    <Link href={`/news/id/${article._id}`}>
-                      <div className="relative flex-shrink-0 w-32 h-24 sm:w-44 sm:h-32 overflow-hidden">
-                        <Image
-                          src={article.coverImage || "/images/img.avif"}
-                          alt={article.title}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    </Link>
-                  </li>
+                    </li>
                 ))}
               </ul>
             </div>
@@ -141,42 +152,46 @@ const Page = () => {
           </div>
         </div>
         <div className="grid grid-cols-1 mt-20 sm:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-8">
-          {articles.slice(5, 14).map((article) => (
-            <Link
-              key={article._id}
-              href={`/news/id/${article._id}`}
-              className="transition duration-300 overflow-hidden flex flex-col border-b pb-6 pt-2 border-zinc-200 dark:border-zinc-800">
-              <div className="relative w-full h-68">
-                <Image
-                  src={article.coverImage || "/images/img.avif"}
-                  alt={article.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-3 right-3 inline-flex items-center bg-gradient-to-r from-blue-800 to-purple-800 text-white text-xs font-medium px-2 py-1 rounded-md shadow w-fit">
-                  {article.category?.name}
+          {gridItems.map((item) =>
+            item.type === 'ad' ? (
+              <NativeAdGridCard key={item.key} ad={item.data} />
+            ) : (
+              <Link
+                key={item.data._id}
+                href={`/news/id/${item.data._id}`}
+                className="transition duration-300 overflow-hidden flex flex-col border-b pb-6 pt-2 border-zinc-200 dark:border-zinc-800">
+                <div className="relative w-full h-68">
+                  <Image
+                    src={item.data.coverImage || "/images/img.avif"}
+                    alt={item.data.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-3 right-3 inline-flex items-center bg-gradient-to-r from-blue-800 to-purple-800 text-white text-xs font-medium px-2 py-1 rounded-md shadow w-fit">
+                    {item.data.category?.name}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 flex flex-col justify-between flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 hover:underline">
-                  {article.title}
-                </h3>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-                  {article.summary}
-                </p>
-                <div className="flex items-center justify-between mt-4 text-md mx-1 text-gray-500 dark:text-gray-400">
-                  <span>
-                    {formatDistanceToNow(new Date(article.publishedAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <FontAwesomeIcon icon={faEye} /> {article.views}
-                  </span>
+                <div className="mt-4 flex flex-col justify-between flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 hover:underline">
+                    {item.data.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+                    {item.data.summary}
+                  </p>
+                  <div className="flex items-center justify-between mt-4 text-md mx-1 text-gray-500 dark:text-gray-400">
+                    <span>
+                      {formatDistanceToNow(new Date(item.data.publishedAt), {
+                        addSuffix: true,
+                      })}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <FontAwesomeIcon icon={faEye} /> {item.data.views}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          )}
         </div>
       </div>
       }
